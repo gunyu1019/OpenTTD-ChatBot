@@ -1,0 +1,7 @@
+discord.py==v2.0.1
+git+https://github.com/gunyu1019/discord-extension-interaction.git@feature/client-independence
+
+# OpenTTD JGRPP에는 "broadcast_ss" (DestType) 존재합니다.
+# 따라서, 일부 수정된 포크된 모듈입니다.
+# https://github.com/JGRennison/OpenTTD-patches/blob/jgrpp/src/network/network_type.h#L89
+git+https://github.com/gunyu1019/libottdadmin2.git

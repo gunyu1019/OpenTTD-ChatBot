@@ -1,7 +1,11 @@
+from typing import Tuple, Any
+
 import discord
-from libottdadmin2.client.tracking import TrackingMixIn
-from libottdadmin2.enums import Action, DestType, UpdateType, UpdateFrequency
 from libottdadmin2.client.asyncio import OttdAdminProtocol
+from libottdadmin2.client.tracking import TrackingMixIn
+from libottdadmin2.enums import UpdateType, UpdateFrequency
+from libottdadmin2.packets import Packet
+from libottdadmin2.util import camel_to_snake
 
 
 class OpenTTDClient(TrackingMixIn, OttdAdminProtocol):
@@ -32,47 +36,9 @@ class OpenTTDClient(TrackingMixIn, OttdAdminProtocol):
         )
         return protocol
 
-    def on_server_chat(
-        self, action: Action, type: DestType, client_id: int, message: str, extra: int
-    ):
-        client = self.clients.get(client_id, client_id)
-        client = getattr(client, "name", client)  # Fallback to client id
-        self.log.debug(
-            "Chat: [%s@%s] %s > %s",
-            Action(action).name,
-            DestType(type).name,
-            client,
-            message,
-        )
-        self.discord_client.dispatch(
-            "server_chat", action=action, type=type, client=client, message=message, extra=extra
-        )
-
-    def on_server_cmd_logging(
-        self,
-        client_id: int,
-        company_id: int,
-        command_id: int,
-        param1: int,
-        param2: int,
-        tile: int,
-        text: str,
-        frame: int,
-    ):
-        client = self.clients.get(client_id, client_id)
-        client = getattr(client, "name", client)  # Fallback to client id
-        company = self.companies.get(company_id, company_id)
-        company = getattr(company, "name", company)  # Fallback to company id
-        command = self.commands.get(command_id, command_id)
-        self.log.debug(
-            "Command: [%s/%s] %s > 0x%x 0x%x Tile 0x%x (%s) on frame %d",
-            client,
-            company,
-            command,
-            param1,
-            param2,
-            tile,
-            text,
-            frame,
-        )
-
+    def packet_received(self, packet: Packet, data: Tuple[Any, ...]) -> None:
+        super(OpenTTDClient, self).packet_received(packet=packet, data=data)
+        func_name = camel_to_snake(packet.__class__.__name__)
+        self.discord_client.dispatch(func_name, **data._asdict())
+        self.discord_client.dispatch("{}_raw".format(func_name), data=data)
+        return
