@@ -133,4 +133,5 @@ dmypy.json
 
 # Import Configuration File
 config/config.ini
+config/profile_image.json
 logs/
